@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sodium.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+#define MAX 80
+#define PORT 4000
+#define SA struct sockaddr
+#define TOKEN_SIZE 128
+#define PAYLOAD_SIZE crypto_secretbox_MACBYTES + TOKEN_SIZE
+#define MSG_ASK "Can I get the solution to the challenge, please?"
+#define STATUS_BAD 0
+#define STATUS_GOOD 1
+
+int main()
+{
+        int sockfd, connfd;
+		struct sockaddr_in servaddr, cli;
+
+        // socket create and verification
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd == -1) {
+                printf("socket creation failed...\n");
+                exit(0);
+        }
+        else
+                printf("Socket successfully created..\n");
+        bzero(&servaddr, sizeof(servaddr));
+
+        // assign IP, PORT
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_addr.s_addr = inet_addr("192.168.1.77");
+        servaddr.sin_port = htons(PORT);
+
+        // connect the client socket to server socket
+        if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
+                printf("connection with the server failed...\n");
+                exit(0);
+        }
+        else
+                printf("connected to the server..\n");
+
+        // function for chat
+        // close the socket
+
+
+/*-------------------------ENCRYPT--------------------------------------*/
+/*---------------------------------------------------------------------*/
+
+
+
+
+/*TO CALL THE KEY VALUE*/
+FILE *gptr;
+    char str[crypto_secretbox_KEYBYTES] = {0};
+   char j;
+ gptr = fopen("key", "r");
+int i=0;
+while(i<crypto_secretbox_KEYBYTES)
+{
+j = fgetc(gptr);
+str[i] = str[i] + j;
+i++;
+}
+printf("\n%s\n", str);
+
+
+struct message {
+int hacker_id; /* this is just the number part of the ID */
+int status;
+unsigned char nonce[crypto_secretbox_NONCEBYTES];
+unsigned char payload[PAYLOAD_SIZE];
+
+}M1,M2;
+
+struct message *ptr1;
+struct message *ptr2;
+ptr1=&M1;
+ptr2=&M2;
+
+char tbuff[128]="Can I get the solution to the challenge, please?\0";
+
+M1.hacker_id = 23;
+randombytes_buf(M1.nonce, crypto_secretbox_NONCEBYTES);
+
+crypto_secretbox_easy(M1.payload, tbuff, TOKEN_SIZE, M1.nonce, str);
+printf("\n%s\n", M1.payload);
+
+send(sockfd, ptr1, sizeof(struct message), 0);
+recv(sockfd, ptr2, sizeof(struct message), 0);
+printf("%d\n", M2.status);
+
+unsigned char decrypted[TOKEN_SIZE];
+if (crypto_secretbox_open_easy(decrypted, M2.payload, PAYLOAD_SIZE, M2.nonce, str) != 0) {
+    printf("\nmessage forged!\n");
+}
+else
+{
+printf("\nSucess Code\n");
+}
+}
+
+if (crypto_secretbox_open_easy(decrypted, M2.payload, PAYLOAD_SIZE, M2.nonce, str) != 0) {
+    printf("\nmessage forged!\n");
+}
+else
+{
+printf("\nSucess Code\n");
+break;
+}
+}
+}
+
+unsigned char hashing[crypto_generichash_BYTES];
+crypto_generichash(hashing, crypto_generichash_BYTES, decrypted, TOKEN_SIZE, NULL, 0);
+
+int binary_length;
+sodium_base64_encoded_len((size_t*)binary_length, variant);
+char b64[binary_length];
+sodium_bin2base64(b64, binary_length, hashing, crypto_generichash_BYTES, variant);
+printf("%s", b64);
+close(sockfd);
+}
